@@ -1,6 +1,6 @@
+"use client";
 export const dynamic = "force-dynamic";
 
-"use client";
 import { DeleteIcon, EditIcon, ViewIcon } from "@chakra-ui/icons";
 import {
   IconButton,
