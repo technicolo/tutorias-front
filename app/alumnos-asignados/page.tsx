@@ -1,6 +1,6 @@
+"use client";
 export const dynamic = "force-dynamic";
 
-"use client";
 import { AddIcon, ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
   Box,
