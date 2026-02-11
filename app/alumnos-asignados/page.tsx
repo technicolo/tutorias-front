@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 import { AddIcon, ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
@@ -157,7 +159,7 @@ const AlumnosAsignados: React.FC = () => {
 
       <GenericTable<Student>
         caption={`Alumnos asignados a ${tutorName || "—"}`}
-        data={students} 
+        data={students}
         TableHeader={TableHeader}
         renderRow={(student: Student, index: number) => (
           <Tr key={student.id}>
