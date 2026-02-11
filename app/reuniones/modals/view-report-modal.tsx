@@ -98,27 +98,6 @@ const ViewReportModal: React.FC<Props> = ({
     });
   }, [onOpenSubjects, studentId, report?.career?.id, report?.career?.name]);
 
-  const handleSendReport = useCallback(async () => {
-    if (!meetingId) return;
-
-    try {
-      setSendingReport(true);
-      await UserService.sendReportToStudent(meetingId);
-
-      toastSuccess({
-        title: ReunionestoastMessages.SEND_REPORT_SUCCESS_TITLE,
-        description: ReunionestoastMessages.SEND_REPORT_SUCCESS_DESC,
-      });
-    } catch (err) {
-      toastError({
-        title: ReunionestoastMessages.SEND_REPORT_ERROR_TITLE,
-        description: ReunionestoastMessages.SEND_REPORT_ERROR_DESC,
-      });
-    } finally {
-      setSendingReport(false);
-    }
-  }, [meetingId]);
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay />
@@ -182,7 +161,6 @@ const ViewReportModal: React.FC<Props> = ({
 
           <Button
             colorScheme="blue"
-            onClick={handleSendReport}
             isLoading={sendingReport}
             isDisabled={submitting}
           >
