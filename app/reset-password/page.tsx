@@ -1,15 +1,12 @@
-"use client";
+import { Suspense } from "react";
+import ResetPasswordClient from './client-reset-password';
+
 export const dynamic = "force-dynamic";
 
-import { useSearchParams } from "next/navigation";
-import CreatePassword from "./reset-password";
-
-const Page = () => {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
-  const linkId = searchParams.get("linkId") ?? "";
-
-  return <CreatePassword token={token} linkId={linkId} />;
-};
-
-export default Page;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordClient />
+    </Suspense>
+  );
+}
