@@ -30,7 +30,7 @@ yarn.lock
 .env*.local
 
 # vercel
-.vercel
+
 
 # typescript
 *.tsbuildinfo
