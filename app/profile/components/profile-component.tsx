@@ -28,20 +28,15 @@ import {
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  toastError,
-  toastSuccess,
-  toastWarn,
-} from "../../../common/feedback/toast-standalone";
 import { UserService } from "../../../services/admin-service";
 import { AuthService } from "../../../services/auth-service";
-import { ProfileToastMessages } from "../enums/toast-messages.enum";
 import { Department } from "../interfaces/departments.interface";
 import { TutorPatchMe } from "../interfaces/tutor-patch-me.interface";
 
 const jwt = require("jsonwebtoken");
 
 const ProfileComponent = () => {
+  const [role, setRole] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [userData, setUserData] = useState<TutorPatchMe>({
     id: 0,
@@ -52,18 +47,12 @@ const ProfileComponent = () => {
     departmentId: 0,
   });
   const [isDelete, setIsDelete] = useState(false);
+  const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [departments, setDepartments] = useState<Department[]>();
-  const [decodedToken, setDecodedToken] = useState({
-    email: "",
-    sub: 0,
-    role: 0,
-    iat: 0,
-    exp: 0,
-  });
 
   const toast = useToast();
   const router = useRouter();
@@ -84,118 +73,51 @@ const ProfileComponent = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (!userData?.name) {
-      toastWarn({
-        title: ProfileToastMessages.EMPTY_NAME_WARNING_TITLE,
-        description:
-          decodedToken.role === 1
-            ? ProfileToastMessages.EMPTY_NAME_WARNING_DESC_STUDENT
-            : decodedToken.role === 2
-              ? ProfileToastMessages.EMPTY_NAME_WARNING_DESC_TUTOR
-              : ProfileToastMessages.EMPTY_NAME_WARNING_DESC_ADMIN,
-      });
+      setError("Debes ingresar el nuevo nombre del tutor");
       nameRef.current?.focus();
       return;
     }
 
     if (!userData?.lastName) {
-      toastWarn({
-        title: ProfileToastMessages.EMPTY_LASTNAME_WARNING_TITLE,
-        description:
-          decodedToken.role === 1
-            ? ProfileToastMessages.EMPTY_LASTNAME_WARNING_DESC_STUDENT
-            : decodedToken.role === 2
-              ? ProfileToastMessages.EMPTY_LASTNAME_WARNING_DESC_TUTOR
-              : ProfileToastMessages.EMPTY_LASTNAME_WARNING_DESC_ADMIN,
-      });
+      setError("Debes ingresar el nuevo apellido del tutor");
       lastNameRef.current?.focus();
       return;
     }
 
     if (!userData?.telephone) {
-      toastWarn({
-        title: ProfileToastMessages.EMPTY_TELEPHONE_WARNING_TITLE,
-        description:
-          decodedToken.role === 1
-            ? ProfileToastMessages.EMPTY_TELEPHONE_WARNING_DESC_STUDENT
-            : decodedToken.role === 2
-              ? ProfileToastMessages.EMPTY_TELEPHONE_WARNING_DESC_TUTOR
-              : ProfileToastMessages.EMPTY_TELEPHONE_WARNING_DESC_ADMIN,
-      });
+      setError("Debes ingresar el nuevo teléfono del tutor");
       telephoneRef.current?.focus();
       return;
     }
 
-    if (decodedToken.role === 2 && !userData?.departmentId) {
-      toastWarn({
-        title: ProfileToastMessages.EMPTY_DEPARTMENT_WARNING_TITLE,
-        description: ProfileToastMessages.EMPTY_DEPARTMENT_WARNING_DESC,
-      });
+    if (!userData?.departmentId) {
+      setError("Debes ingresar el nuevo departamento del tutor");
       departamentRef.current?.focus();
       return;
     }
 
     try {
-      if (decodedToken.role === 2) {
-        await UserService.tutorPatchMe(userData.id, userData);
-        setSuccess(true);
-        toastSuccess({
-          title: ProfileToastMessages.EDIT_TUTOR_SUCCESS_TITLE,
-          description: ProfileToastMessages.EDIT_TUTOR_SUCCESS_DESC,
-        });
-        setIsEditing(false);
-      }
-      if (decodedToken.role === 1) {
-        await UserService.updateStudentMe(
-          userData.id,
-          userData.name,
-          userData.lastName,
-          userData.telephone,
-        );
-        setSuccess(true);
-        toastSuccess({
-          title: ProfileToastMessages.EDIT_STUDENT_SUCCESS_TITLE,
-          description: ProfileToastMessages.EDIT_STUDENT_SUCCESS_DESC,
-        });
-        setIsEditing(false);
-      }
-
-      if (decodedToken.role === 3) {
-        await UserService.updateUser(userData.id, {
-          name: userData.name,
-          lastName: userData.lastName,
-          telephone: userData.telephone,
-        });
-        setSuccess(true);
-        toastSuccess({
-          title: ProfileToastMessages.EDIT_ADMIN_SUCCESS_TITLE,
-          description: ProfileToastMessages.EDIT_ADMIN_SUCCESS_DESC,
-        });
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error(error);
-      toastError({
-        title:
-          decodedToken.role === 1
-            ? ProfileToastMessages.EDIT_STUDENT_ERROR_TITLE
-            : decodedToken.role === 2
-              ? ProfileToastMessages.EDIT_TUTOR_ERROR_TITLE
-              : ProfileToastMessages.EDIT_ADMIN_ERROR_TITLE,
-        description:
-          decodedToken.role === 1
-            ? ProfileToastMessages.EDIT_STUDENT_ERROR_DESC
-            : decodedToken.role === 2
-              ? ProfileToastMessages.EDIT_TUTOR_ERROR_DESC
-              : ProfileToastMessages.EDIT_ADMIN_ERROR_DESC,
+      await UserService.tutorPatchMe(userData.id, userData);
+      setSuccess(true);
+      toast({
+        title: "Tutor editado",
+        description: "El tutor fue editado con exito",
+        duration: 3000,
+        isClosable: true,
+        status: "success",
       });
+      setIsEditing(false);
+    } catch (error) {
+      setError("Error al actualizar el tutor");
       setSuccess(false);
     }
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
@@ -208,14 +130,12 @@ const ProfileComponent = () => {
   const handleDelete = async () => {
     try {
       await UserService.deleteUser(userData.id, password);
-      toastSuccess({
-        title: ProfileToastMessages.DELETE_ACCOUNT_SUCCESS_TITLE,
-        description:
-          decodedToken.role === 1
-            ? ProfileToastMessages.DELETE_STUDENT_SUCCESS_DESC
-            : decodedToken.role === 2
-              ? ProfileToastMessages.DELETE_TUTOR_SUCCESS_DESC
-              : ProfileToastMessages.DELETE_ADMIN_SUCCESS_DESC,
+      toast({
+        title: "Tutor Eliminado!",
+        description: "El tutor fue eliminado con exito",
+        duration: 1500,
+        isClosable: true,
+        status: "success",
       });
       onClose();
       Cookies.remove("authTokens", { path: "/" });
@@ -223,6 +143,7 @@ const ProfileComponent = () => {
     } catch (err) {
       console.error(err);
       setIsDelete(false);
+      setError("El usuario no se pudo eliminar");
     }
   };
 
@@ -245,30 +166,32 @@ const ProfileComponent = () => {
       }
     };
 
+    const fetchAllDepartments = async () => {
+      try {
+        const departments = await UserService.fetchAllDepartments();
+        setDepartments(departments);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      }
+    };
+
     const token = Cookies.get("authTokens");
+    console.log("TOKEN FROM COOKIE: ", token);
     if (!token) {
+      console.log("No token found");
       return;
     }
 
     try {
-      const decoded = jwt.decode(token);
-      setDecodedToken(decoded);
-
-      if (decoded?.role !== 1) {
-        (async () => {
-          try {
-            const departments = await UserService.fetchAllDepartments();
-            setDepartments(departments);
-          } catch (error) {
-            console.error("Error fetching departments:", error);
-          }
-        })();
-      }
+      const decodedToken = jwt.decode(token);
+      console.log("Decoded token:", decodedToken);
+      setRole(decodedToken?.role);
     } catch (error) {
       console.error("Error decoding token:", error);
     }
 
     fetchUserData();
+    fetchAllDepartments();
   }, []);
 
   if (isLoading) {
@@ -335,6 +258,7 @@ const ProfileComponent = () => {
               right="30px"
               zIndex={1000}
               onClick={() => {
+                console.log("Botón clickeado");
                 onOpen();
               }}
             >
@@ -381,12 +305,16 @@ const ProfileComponent = () => {
           </ModalContent>
         </Modal>
 
-        <Text
-          color="red"
-          textAlign="center"
-          marginBottom="17px"
-          fontSize="17px"
-        ></Text>
+        {error && isEditing ? (
+          <Text
+            color="red"
+            textAlign="center"
+            marginBottom="17px"
+            fontSize="17px"
+          >
+            {error}
+          </Text>
+        ) : undefined}
 
         <form onSubmit={handleSubmit}>
           <VStack spacing={4} align="stretch" marginBottom="20px">
@@ -469,7 +397,7 @@ const ProfileComponent = () => {
             </HStack>
           </VStack>
 
-          {decodedToken.role === 2 && (
+          {role === 2 && (
             <VStack spacing={4} align="stretch">
               <HStack spacing={4} w="99%">
                 <FormControl>
