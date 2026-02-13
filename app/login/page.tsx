@@ -47,7 +47,7 @@ const Login = () => {
         title: LoginToastMessages.LOGIN_SUCCESS_TITLE,
         description: LoginToastMessages.LOGIN_SUCCESS_DESC,
       });
-      Cookies.set("authTokens", data.accessToken, { expires: 7 });
+      Cookies.set("authTokens", data.accessToken, { expires: 7, path: "/" });
       setError("");
       router.replace("/profile");
     } catch {
