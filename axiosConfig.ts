@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { toastError } from "./common/feedback/toast-standalone";
+import Cookies from 'js-cookie';
 
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`;
@@ -7,8 +8,8 @@ function getCookie(name: string): string | undefined {
   if (parts.length === 2) return parts.pop()?.split(";").shift();
 }
 
-function getToken() {
-  return getCookie("authTokens");
+function getToken(): string | undefined {
+  return Cookies.get("authTokens");
 }
 
 declare module "axios" {
@@ -72,17 +73,14 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers = config.headers ?? {};
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+axiosInstance.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
